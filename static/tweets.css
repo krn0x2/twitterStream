@@ -1,0 +1,25 @@
+#main{
+	text-align: center;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+#tweets{
+	text-align: left;
+    margin: 0 10px;
+}
+#headline{
+	font-size: 3em;
+	font-family: Tahoma;
+}
+#tweets > li{
+	border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+.bootstrap-tagsinput{
+	width:350px;
+}
+#warning{
+    border-radius: 10px;
+    background-color: rgba(0,0,0,0.7);
+    padding: 5px;
+    color: white;
+    display: none;
+}

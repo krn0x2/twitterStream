@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bootstrap Tags Input</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="bootstrap-tagsinput.css">
+  <link rel="stylesheet" href="tweets.css">
+</script>
+</head>
+<body>
+<div id="main" class="col-xs-6 col-xs-push-3">
+  <div id="headline">
+    Live Tweet Search
+  </div>
+  <input type="text" id="search" value="" data-role="tagsinput" placeholder="Add Keywords" /><br>
+  <input type="text" class="form-control" id="localSearch" value="" placeholder="Search within Tweets" />
+  <span id="warning"> Rate limit achieved. Please wait for a couple of seconds and then change keywords.. </span>
+  <div id="tweets" class="media-list">
+  </div>
+</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script src="bootstrap-tagsinput.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+  var socket = io('http://127.0.0.1:8080');
+  var tweets = [];
+  var fTweets = [];
+  var searchString;
+  function showTweets(arr){
+    $("#tweets > li").css("display","none");
+    arr.forEach(function(id){
+      $('#tweets > li[data-id="'+id+'"]').css("display","block");
+    });
+  }
+  socket.on('rateLimit',function(){
+    console.log("ratelimit");
+    $("#warning").css("display","block");
+  })
+  socket.on('tweet', function(tweet){
+    tweets.push(tweet);
+    fTweets = fTweets.concat([tweet].filter(function(t){
+      return t.text.toLowerCase().search(searchString) > -1;
+    })
+    .map(function(t){
+      return t.id_str;
+    })
+    );
+    var html = 
+    `<li class="media" data-id=${tweet.id_str}>
+    <div class="media-left media-middle">
+    <a href="#">
+    <img class="media-object" src=${tweet.user.profile_image_url} alt="...">
+    </a>
+    </div>
+    <div class="media-body">
+    <h4 class="media-heading">${tweet.user.screen_name}</h4>
+    ${tweet.text}
+    </div>
+    </li>`;
+    $("#tweets").prepend(html);
+    showTweets(fTweets);
+  });
+  $('#localSearch').keyup(function(event) {
+    searchString = event.target.value;
+    console.log(searchString);
+    fTweets = tweets
+    .filter(function(t){
+      return t.text.toLowerCase().search(searchString) > -1;
+    })
+    .map(function(t){
+      return t.id_str;
+    });
+    showTweets(fTweets);
+  });
+  $('#search').on('itemAdded', function(event) {
+    socket.emit('watch',event.item);
+    $("#warning").css("display","none");
+  });
+  $('#search').on('itemRemoved', function(event) {
+    socket.emit('unwatch',event.item);
+    $("#warning").css("display","none");
+  });
+  </script>
+</body>
+</html>
